@@ -128,15 +128,19 @@ function tick(){try{
   $("gdate").textContent=GM[p.month-1]+" "+p.day;$("gday").textContent=DAYS[wd]+", "+p.year;
   var c=toCoptic(p.year,p.month,p.day);$("cdate").textContent=CM[c.m]+" "+c.d;$("cyear").textContent="Year "+c.y+" AM";
 }catch(e){fail(e)}}
-function J(u){return fetch(u).then(function(r){if(!r.ok)throw 0;return r.json()})}
+function F(u,txt,ms){return new Promise(function(res,rej){var done=false,t=setTimeout(function(){if(!done){done=true;rej(0)}},ms||8000);
+  fetch(u).then(function(r){if(!r.ok)throw 0;return txt?r.text():r.json()}).then(function(d){if(!done){done=true;clearTimeout(t);res(d)}}).catch(function(){if(!done){done=true;clearTimeout(t);rej(0)}})})}
+function J(u){return F(u,false)}
+function X(u){return F(u,true)}
 function fmt(n,d){return n.toLocaleString("en-US",{maximumFractionDigits:d||0})}
-var usd=null;
+var usd=null,xau=null;
 function loadFx(){J("https://open.er-api.com/v6/latest/USD").then(function(d){
-  usd=d.rates.EGP;$("usdv").textContent=fmt(usd,2)+" EGP";$("eurv").textContent=fmt(usd/d.rates.EUR,2)+" EGP";mark("FX",1);loadGold();}).catch(function(){mark("FX",0)})}
+  usd=d.rates.EGP;if(d.rates.XAU)xau=1/d.rates.XAU;$("usdv").textContent=fmt(usd,2)+" EGP";$("eurv").textContent=fmt(usd/d.rates.EUR,2)+" EGP";mark("FX",1);loadGold();}).catch(function(){mark("FX",0)})}
 function loadGold(){if(!usd)return;
-  J("https://xaus.com/api/v1/spot").then(function(d){if(!d.spot_usd_oz)throw 0;return d.spot_usd_oz})
-  .catch(function(){return J("https://api.gold-api.com/price/XAU").then(function(d){if(!d.price)throw 0;return d.price})})
-  .then(function(oz){$("goldv").textContent=fmt(oz/31.1035*usd*21/24,0)+" EGP";mark("Gold",1)}).catch(function(){mark("Gold",0)})}
+  J("https://api.gold-api.com/price/XAU").then(function(d){if(!d.price)throw 0;return d.price})
+  .catch(function(){return J("https://xaus.com/api/v1/spot").then(function(d){if(!d.spot_usd_oz)throw 0;return d.spot_usd_oz})})
+  .catch(function(){if(!xau)throw 0;return xau})
+  .then(function(oz){if(!(oz>500&&oz<100000))throw 0;$("goldv").textContent=fmt(oz/31.1035*usd*21/24,0)+" EGP";mark("Gold",1)}).catch(function(){mark("Gold",0)})}
 var WI={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>',
 moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
 cloud:'<path d="M7 18a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 8.5 4.5 4.5 0 0 1 17 18z"/>',
@@ -150,11 +154,17 @@ function loadWeather(){J("https://api.open-meteo.com/v1/forecast?latitude=30.044
   $("wsub").textContent="Cairo \u00B7 "+w[1]+" \u00B7 H "+Math.round(d.daily.temperature_2m_max[0])+"\u00B0 L "+Math.round(d.daily.temperature_2m_min[0])+"\u00B0";mark("Weather",1)}).catch(function(){mark("Weather",0)})}
 var SRC=[["Youm7","youm7.com"],["Al-Masry Al-Youm","almasryalyoum.com"],["FilGoal","filgoal.com"],["Yallakora","yallakora.com"]];
 var news=[],ni=0;
-function loadNews(){var per=[],left=SRC.length;
-  SRC.forEach(function(s,i){per[i]=[];
-    J("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent("https://news.google.com/rss/search?q=site:"+s[1]+"+when:1d&hl=ar&gl=EG&ceid=EG:ar"))
-    .then(function(d){(d.items||[]).slice(0,6).forEach(function(it){per[i].push({s:s[0],t:it.title.replace(/\s+-\s+[^-]*$/,"")})})})
-    .catch(function(){}).then(function(){if(--left===0){var all=[];for(var k=0;k<6;k++)per.forEach(function(a){if(a[k])all.push(a[k])});mark("News",all.length>0);if(all.length){news=all;ni=0;showNews()}}})})}
+function clean(t){return t.replace(/\s+-\s+[^-]*$/,"")}
+function parseRss(x,src){var doc=new DOMParser().parseFromString(x,"text/xml"),it=doc.getElementsByTagName("item"),o=[];
+  for(var i=0;i<it.length&&i<6;i++){var t=it[i].getElementsByTagName("title")[0];if(t)o.push({s:src,t:clean(t.textContent)})}return o}
+function feed(s){var e=encodeURIComponent("https://news.google.com/rss/search?q=site:"+s[1]+"+when:1d&hl=ar&gl=EG&ceid=EG:ar");
+  function viaProxy(p){return X(p+e).then(function(x){var o=parseRss(x,s[0]);if(!o.length)throw 0;return o})}
+  return J("https://api.rss2json.com/v1/api.json?rss_url="+e).then(function(d){var o=[];(d.items||[]).slice(0,6).forEach(function(it){o.push({s:s[0],t:clean(it.title)})});if(!o.length)throw 0;return o})
+  .catch(function(){return viaProxy("https://api.allorigins.win/raw?url=")})
+  .catch(function(){return viaProxy("https://corsproxy.io/?url=")})
+  .catch(function(){return []})}
+function loadNews(){Promise.all(SRC.map(feed)).then(function(per){var all=[];for(var k=0;k<6;k++)per.forEach(function(a){if(a[k])all.push(a[k])});
+  mark("News",all.length>0);if(all.length){news=all;ni=0;showNews()}})}
 function showNews(){if(!news.length)return;var n=news[ni%news.length];ni++;$("nsrc").textContent="News \u00B7 "+n.s;$("nline").textContent=n.t}
 tick();setInterval(tick,1000);
 loadFx();loadWeather();loadNews();
