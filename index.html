@@ -1,174 +1,47 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-<meta charset="utf-8">
-<title>Tadros Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<style>
-:root{--gold:#d4af37;--gold2:#f1d98a;--dim:#a8935a;--card:#121212;--line:rgba(212,175,55,.35);color-scheme:dark;box-sizing:border-box}
-*{box-sizing:border-box;margin:0}
-html,body{height:100%;background:#050505;color:var(--gold2);font-family:"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
-.stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
-.bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,#1b1608 0%,#050505 60%)}
-.pyr{position:absolute;right:0;bottom:0;width:1190.4px;opacity:.9;pointer-events:none}
-.grid{position:relative;height:1080px;width:1920px;padding:42.24px;display:grid;gap:24.96px;grid-template-columns:1.25fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr .62fr}
-.card{background:rgba(18,18,18,.82);border:1px solid var(--line);border-radius:30.72px;padding:26.88px 34.56px;display:flex;align-items:center;gap:26.88px;backdrop-filter:blur(2px)}
-.card svg.ic{width:92.16px;height:92.16px;flex:none;fill:none;stroke:var(--gold);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.lbl{font-size:22.08px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase}
-.val{font-size:55.68px;font-weight:600;color:var(--gold2);margin-top:5.76px;line-height:1.1}
-.sub{font-size:24.96px;color:var(--dim);margin-top:5.76px}
-.clockcard{grid-row:1/4;flex-direction:column;justify-content:center;gap:19.2px;text-align:center}
-.greet{font-size:36.48px;color:var(--gold2);font-weight:400}
-.analog{width:460.8px;height:460.8px;max-height:562px;max-width:562px}
-.digital{font-size:107.52px;font-weight:200;color:var(--gold);line-height:1;text-shadow:0 0 30px rgba(212,175,55,.35)}
-.digital small{font-size:36.48px;color:var(--dim);margin-left:11.52px}
-.news{grid-column:1/4}
-.news .val{font-size:38.4px;font-weight:400;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.news>div{flex:1}
-.st{position:absolute;left:42px;bottom:8px;font-size:18px;color:#a8935a;opacity:.85}
-</style>
-</head>
-<body>
-<div class="bg"></div>
-<div class="stage" id="stage">
-<svg class="pyr" viewBox="0 0 800 300" aria-hidden="true">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4af37" stop-opacity=".22"/><stop offset="1" stop-color="#d4af37" stop-opacity=".03"/></linearGradient></defs>
-  <circle cx="560" cy="90" r="46" fill="#d4af37" opacity=".12"/>
-  <polygon points="150,300 330,70 510,300" fill="url(#g)"/>
-  <polygon points="430,300 560,130 690,300" fill="url(#g)"/>
-  <polygon points="620,300 700,195 780,300" fill="url(#g)"/>
-</svg>
-<main class="grid">
-  <section class="card clockcard">
-    <div class="greet" id="greet"></div>
-    <svg class="analog" viewBox="-100 -100 200 200" aria-hidden="true">
-      <circle r="96" fill="#0b0b0b" stroke="#d4af37" stroke-width="2"/>
-      <circle r="90" fill="none" stroke="rgba(212,175,55,.25)" stroke-width=".6"/>
-      <g id="ticks"></g>
-      <line id="hh" x1="0" y1="6" x2="0" y2="-48" stroke="#f1d98a" stroke-width="4.5" stroke-linecap="round"/>
-      <line id="mh" x1="0" y1="8" x2="0" y2="-70" stroke="#f1d98a" stroke-width="3" stroke-linecap="round"/>
-      <line id="sh" x1="0" y1="14" x2="0" y2="-78" stroke="#d4af37" stroke-width="1.2" stroke-linecap="round"/>
-      <circle r="4" fill="#d4af37"/>
-    </svg>
-    <div class="digital" id="digital"></div>
-  </section>
-
-  <section class="card">
-    <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-    <div><div class="lbl">Gregorian</div><div class="val" id="gdate"></div><div class="sub" id="gday"></div></div>
-  </section>
-  <section class="card">
-    <svg class="ic" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9.5 3h5M9.5 21h5M3 9.5v5M21 9.5v5"/></svg>
-    <div><div class="lbl">Coptic</div><div class="val" id="cdate"></div><div class="sub" id="cyear"></div></div>
-  </section>
-
-  <section class="card">
-    <svg class="ic" id="wicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
-    <div><div class="lbl">Weather</div><div class="val" id="wtemp">--°C</div><div class="sub" id="wsub">Cairo</div></div>
-  </section>
-  <section class="card">
-    <svg class="ic" viewBox="0 0 48 48" style="fill:rgba(212,175,55,.18)"><polygon points="14,22 34,22 38,30 10,30"/><polygon points="6,32 22,32 25,41 3,41"/><polygon points="26,32 42,32 45,41 23,41"/></svg>
-    <div><div class="lbl">Gold</div><div class="val" id="goldv">-- EGP</div><div class="sub">21K / gram (approx.)</div></div>
-  </section>
-
-  <section class="card">
-    <svg class="ic" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19"/><text x="24" y="32" text-anchor="middle" font-size="24" fill="#d4af37" stroke="none" font-family="Arial">$</text></svg>
-    <div><div class="lbl">US Dollar</div><div class="val" id="usdv">-- EGP</div><div class="sub">1 USD</div></div>
-  </section>
-  <section class="card">
-    <svg class="ic" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19"/><text x="24" y="32" text-anchor="middle" font-size="24" fill="#d4af37" stroke="none" font-family="Arial">€</text></svg>
-    <div><div class="lbl">Euro</div><div class="val" id="eurv">-- EGP</div><div class="sub">1 EUR</div></div>
-  </section>
-
-  <section class="card news">
-    <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>
-    <div><div class="lbl" id="nsrc">Top headline</div><div class="val" id="nline" dir="auto">--</div></div>
-  </section>
-</main>
-<div class="st" id="st"></div>
-</div>
-<script>
-var TZ="Africa/Cairo";
-var CM=["Thout","Paopi","Hathor","Koiak","Tobi","Meshir","Paremhat","Paremoude","Pashons","Paoni","Epip","Mesori","Nesi"];
-var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-var GM=["January","February","March","April","May","June","July","August","September","October","November","December"];
-var ST={};
-function $(i){return document.getElementById(i)}
-function mark(k,ok){ST[k]=ok;var t="";for(var n in ST){t+=n+(ST[n]?" OK   ":" FAIL   ")}var e=$("st");if(e)e.textContent=t}
-function fail(e){var x=$("st");if(x)x.textContent="JS error: "+(e&&e.message?e.message:e)}
-window.onerror=function(m,u,l){fail(m+" (line "+l+")")};
-function parts(){
-  var d=new Date(),o=null;
-  try{var f=new Intl.DateTimeFormat("en-US",{timeZone:TZ,year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric",hour12:false});
-    o={};f.formatToParts(d).forEach(function(p){o[p.type]=parseInt(p.value,10)})}catch(e){o=null}
-  if(!o||!o.year||isNaN(o.hour)){o={year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate(),hour:d.getHours(),minute:d.getMinutes(),second:d.getSeconds()}}
-  if(o.hour===24)o.hour=0;return o;
-}
-function jdn(y,m,d){var a=Math.floor((14-m)/12),yy=y+4800-a,mm=m+12*a-3;
-  return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045}
-function cs(y){return 1825030+365*(y-1)+Math.floor(y/4)}
-function toCoptic(y,m,d){var j=jdn(y,m,d),cy=Math.floor((j-1825030)/365.25)+1;
-  while(cs(cy+1)<=j)cy++;while(cs(cy)>j)cy--;var doy=j-cs(cy);
-  return {y:cy,m:Math.floor(doy/30),d:doy%30+1}}
-try{var t="";for(var i=0;i<60;i++){var big=i%5===0,a=i*6*Math.PI/180,r1=big?80:86,r2=90;
-  t+='<line x1="'+(Math.sin(a)*r1).toFixed(2)+'" y1="'+(-Math.cos(a)*r1).toFixed(2)+'" x2="'+(Math.sin(a)*r2).toFixed(2)+'" y2="'+(-Math.cos(a)*r2).toFixed(2)+'" stroke="'+(big?"#d4af37":"rgba(212,175,55,.4)")+'" stroke-width="'+(big?2.2:.8)+'"/>'}
-  $("ticks").innerHTML=t}catch(e){fail(e)}
-function rot(id,deg){$(id).setAttribute("transform","rotate("+deg+")")}
-function fit(){try{var k=Math.min(window.innerWidth/1920,window.innerHeight/1080),st=$("stage");
-  st.style.transform="scale("+k+")";st.style.left=((window.innerWidth-1920*k)/2)+"px";st.style.top=((window.innerHeight-1080*k)/2)+"px"}catch(e){fail(e)}}
-window.addEventListener("resize",fit);fit();
-function tick(){try{
-  var p=parts(),h12=p.hour%12===0?12:p.hour%12,mm=("0"+p.minute).slice(-2),ss=("0"+p.second).slice(-2);
-  $("digital").innerHTML=h12+":"+mm+"<small>"+ss+" "+(p.hour>=12?"PM":"AM")+"</small>";
-  var g=p.hour>=5&&p.hour<12?"Good morning":p.hour>=12&&p.hour<17?"Good afternoon":p.hour>=17&&p.hour<21?"Good evening":"Good night";
-  $("greet").textContent=g+", Tadros";
-  rot("hh",(p.hour%12)*30+p.minute*.5);rot("mh",p.minute*6+p.second*.1);rot("sh",p.second*6);
-  var wd=new Date(Date.UTC(p.year,p.month-1,p.day)).getUTCDay();
-  $("gdate").textContent=GM[p.month-1]+" "+p.day;$("gday").textContent=DAYS[wd]+", "+p.year;
-  var c=toCoptic(p.year,p.month,p.day);$("cdate").textContent=CM[c.m]+" "+c.d;$("cyear").textContent="Year "+c.y+" AM";
-}catch(e){fail(e)}}
-function F(u,txt,ms){return new Promise(function(res,rej){var done=false,t=setTimeout(function(){if(!done){done=true;rej(0)}},ms||8000);
-  fetch(u).then(function(r){if(!r.ok)throw 0;return txt?r.text():r.json()}).then(function(d){if(!done){done=true;clearTimeout(t);res(d)}}).catch(function(){if(!done){done=true;clearTimeout(t);rej(0)}})})}
-function J(u){return F(u,false)}
-function X(u){return F(u,true)}
-function fmt(n,d){return n.toLocaleString("en-US",{maximumFractionDigits:d||0})}
-var usd=null,xau=null;
-function loadFx(){J("https://open.er-api.com/v6/latest/USD").then(function(d){
-  usd=d.rates.EGP;if(d.rates.XAU)xau=1/d.rates.XAU;$("usdv").textContent=fmt(usd,2)+" EGP";$("eurv").textContent=fmt(usd/d.rates.EUR,2)+" EGP";mark("FX",1);loadGold();}).catch(function(){mark("FX",0)})}
-function loadGold(){if(!usd)return;
-  J("https://api.gold-api.com/price/XAU").then(function(d){if(!d.price)throw 0;return d.price})
-  .catch(function(){return J("https://xaus.com/api/v1/spot").then(function(d){if(!d.spot_usd_oz)throw 0;return d.spot_usd_oz})})
-  .catch(function(){if(!xau)throw 0;return xau})
-  .then(function(oz){if(!(oz>500&&oz<100000))throw 0;$("goldv").textContent=fmt(oz/31.1035*usd*21/24,0)+" EGP";mark("Gold",1)}).catch(function(){mark("Gold",0)})}
-var WI={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>',
-moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
-cloud:'<path d="M7 18a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 8.5 4.5 4.5 0 0 1 17 18z"/>',
-rain:'<path d="M7 14a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 4.5 4.5 4.5 0 0 1 17 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>',
-storm:'<path d="M7 14a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 4.5 4.5 4.5 0 0 1 17 14z"/><path d="M12 14l-2 4h3l-2 4"/>',
-fog:'<path d="M4 9h16M3 13h18M6 17h12"/>'};
-function wcat(c,day){if(c===0)return day?["sun","Clear"]:["moon","Clear"];if(c<=3)return["cloud","Partly cloudy"];if(c<=48)return["fog","Fog"];
-  if(c<=67||(c>=80&&c<=82))return["rain","Rain"];if(c>=95)return["storm","Thunderstorm"];return["cloud","Cloudy"]}
-function loadWeather(){J("https://api.open-meteo.com/v1/forecast?latitude=30.0444&longitude=31.2357&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=Africa%2FCairo").then(function(d){
-  var c=d.current,w=wcat(c.weather_code,c.is_day===1);$("wicon").innerHTML=WI[w[0]];$("wtemp").textContent=Math.round(c.temperature_2m)+"\u00B0C";
-  $("wsub").textContent="Cairo \u00B7 "+w[1]+" \u00B7 H "+Math.round(d.daily.temperature_2m_max[0])+"\u00B0 L "+Math.round(d.daily.temperature_2m_min[0])+"\u00B0";mark("Weather",1)}).catch(function(){mark("Weather",0)})}
-var SRC=[["Youm7","youm7.com"],["Al-Masry Al-Youm","almasryalyoum.com"],["FilGoal","filgoal.com"],["Yallakora","yallakora.com"]];
-var news=[],ni=0;
-function clean(t){return t.replace(/\s+-\s+[^-]*$/,"")}
-function parseRss(x,src){var doc=new DOMParser().parseFromString(x,"text/xml"),it=doc.getElementsByTagName("item"),o=[];
-  for(var i=0;i<it.length&&i<6;i++){var t=it[i].getElementsByTagName("title")[0];if(t)o.push({s:src,t:clean(t.textContent)})}return o}
-function feed(s){var e=encodeURIComponent("https://news.google.com/rss/search?q=site:"+s[1]+"+when:1d&hl=ar&gl=EG&ceid=EG:ar");
-  function viaProxy(p){return X(p+e).then(function(x){var o=parseRss(x,s[0]);if(!o.length)throw 0;return o})}
-  return J("https://api.rss2json.com/v1/api.json?rss_url="+e).then(function(d){var o=[];(d.items||[]).slice(0,6).forEach(function(it){o.push({s:s[0],t:clean(it.title)})});if(!o.length)throw 0;return o})
-  .catch(function(){return viaProxy("https://api.allorigins.win/raw?url=")})
-  .catch(function(){return viaProxy("https://corsproxy.io/?url=")})
-  .catch(function(){return []})}
-function loadNews(){Promise.all(SRC.map(feed)).then(function(per){var all=[];for(var k=0;k<6;k++)per.forEach(function(a){if(a[k])all.push(a[k])});
-  mark("News",all.length>0);if(all.length){news=all;ni=0;showNews()}})}
-function showNews(){if(!news.length)return;var n=news[ni%news.length];ni++;$("nsrc").textContent="News \u00B7 "+n.s;$("nline").textContent=n.t}
-tick();setInterval(tick,1000);
-loadFx();loadWeather();loadNews();
-setInterval(loadFx,300000);setInterval(loadWeather,900000);setInterval(loadNews,600000);setInterval(showNews,9000);
-</script>
-</body>
-</html>
+name: Update news
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch headlines
+        run: |
+          python3 - <<'PY'
+          import json, re, urllib.request, urllib.parse
+          import xml.etree.ElementTree as ET
+          sources = [("Youm7","youm7.com"),("Al-Masry Al-Youm","almasryalyoum.com"),("FilGoal","filgoal.com"),("Yallakora","yallakora.com")]
+          items = []
+          for name, site in sources:
+              q = urllib.parse.quote("site:" + site + " when:1d")
+              url = "https://news.google.com/rss/search?q=" + q + "&hl=ar&gl=EG&ceid=EG:ar"
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                  root = ET.fromstring(urllib.request.urlopen(req, timeout=30).read())
+                  n = 0
+                  for it in root.iter("item"):
+                      t = re.sub(r"\s+-\s+[^-]*$", "", it.findtext("title") or "").strip()
+                      if t:
+                          items.append({"s": name, "t": t})
+                          n += 1
+                      if n >= 6:
+                          break
+              except Exception as e:
+                  print("failed", name, e)
+          if items:
+              json.dump(items, open("news.json", "w", encoding="utf-8"), ensure_ascii=False)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "news-bot"
+          git config user.email "news-bot@users.noreply.github.com"
+          git add news.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update news"
+            git push
+          fi
